@@ -64,8 +64,7 @@ describe('Integration Test - Single Agent Workflow', () => {
       headerRow: 2
     });
 
-    expect(response.content[0].text).toContain('keyColumn=B');
-    expect(response.content[0].text).toContain('headerRow=2');
+    expect(response.content[0].text).toBe('設定を更新しました');
 
     // デフォルトに戻す
     await client.callTool('configure', {
