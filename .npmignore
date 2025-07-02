@@ -1,0 +1,44 @@
+# Source files
+src/
+test/
+
+# Config files
+tsconfig.json
+jest.config.js
+jest.integration.config.js
+.eslintrc.json
+
+# Development files
+.env
+*.log
+service-account.json
+test-credentials.json
+live.sh
+
+# Build files
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Documentation source
+*.md.backup
+
+# MCP config
+.mcp.json
+
+# Coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keep dist and bin directories
+!dist/
+!bin/

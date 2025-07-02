@@ -4,6 +4,10 @@
   "description": "MCP server for efficient batch processing of Google Sheets data with API quota management",
   "type": "module",
   "main": "dist/index.js",
+  "files": [
+    "dist",
+    "bin"
+  ],
   "bin": {
     "google-sheet-batch-assistant-mcp": "./bin/google-sheet-batch-assistant-mcp.js"
   },
@@ -15,16 +19,26 @@
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.js",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "lint": "eslint src --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "mcp",
     "google-sheets",
     "batch-processing",
-    "ai-agent"
+    "ai-agent",
+    "model-context-protocol"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ideamans/node-google-sheet-batch-assistant-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ideamans/node-google-sheet-batch-assistant-mcp/issues"
+  },
+  "homepage": "https://github.com/ideamans/node-google-sheet-batch-assistant-mcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "dotenv": "^16.6.1",

@@ -1,2 +1,4 @@
 #!/usr/bin/env node
-import '../dist/index.js';
+
+// This file is used when the package is installed globally or via npx
+import('../dist/index.js');
