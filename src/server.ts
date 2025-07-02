@@ -74,7 +74,8 @@ export class GoogleSheetsMCPServer {
                 type: 'number',
                 description: 'Header row number (1 or greater)'
               }
-            }
+            },
+            additionalProperties: false
           }
         },
         {
@@ -87,11 +88,9 @@ export class GoogleSheetsMCPServer {
                 type: 'array',
                 items: {
                   type: 'array',
-                  items: [
-                    { type: 'string' },
-                    { type: 'string', enum: ['==', '!='] },
-                    { type: 'string' }
-                  ]
+                  minItems: 3,
+                  maxItems: 3,
+                  items: { type: 'string' }
                 },
                 description: 'Array of [column, operator, value] conditions'
               },
@@ -100,7 +99,8 @@ export class GoogleSheetsMCPServer {
                 description: 'Maximum number of results to return'
               }
             },
-            required: ['conditions']
+            required: ['conditions'],
+            additionalProperties: false
           }
         },
         {
@@ -114,7 +114,8 @@ export class GoogleSheetsMCPServer {
                 description: 'Key value to search for'
               }
             },
-            required: ['key']
+            required: ['key'],
+            additionalProperties: false
           }
         },
         {
@@ -136,7 +137,8 @@ export class GoogleSheetsMCPServer {
                 description: 'New value'
               }
             },
-            required: ['key', 'column', 'value']
+            required: ['key', 'column', 'value'],
+            additionalProperties: false
           }
         },
         {
@@ -158,7 +160,8 @@ export class GoogleSheetsMCPServer {
                 description: 'New value'
               }
             },
-            required: ['key', 'column', 'value']
+            required: ['key', 'column', 'value'],
+            additionalProperties: false
           }
         },
         {
@@ -181,11 +184,11 @@ export class GoogleSheetsMCPServer {
               },
               separator: {
                 type: 'string',
-                description: 'Separator character',
-                default: '\\n'
+                description: 'Separator character (default: newline)'
               }
             },
-            required: ['key', 'column', 'value']
+            required: ['key', 'column', 'value'],
+            additionalProperties: false
           }
         }
       ]
@@ -239,7 +242,7 @@ export class GoogleSheetsMCPServer {
     return {
       content: [{
         type: 'text',
-        text: `Configuration updated: keyColumn=${this.sheetConfig.keyColumn}, headerRow=${this.sheetConfig.headerRow}`
+        text: '設定を更新しました'
       }]
     };
   }
@@ -320,7 +323,7 @@ export class GoogleSheetsMCPServer {
     return {
       content: [{
         type: 'text',
-        text: `Update queued: ${key}[${column}] = ${value}`
+        text: '値を更新します'
       }]
     };
   }
@@ -338,13 +341,13 @@ export class GoogleSheetsMCPServer {
     return {
       content: [{
         type: 'text',
-        text: `Immediate update executed: ${key}[${column}] = ${value}`
+        text: '値を更新しました'
       }]
     };
   }
   
   private async handleAppendValue(args: any) {
-    const { key, column, value, separator = '\\n' } = args;
+    const { key, column, value, separator = '\n' } = args;
     
     const data = await this.sheetsClient.getCachedData();
     if (!data) {
@@ -369,7 +372,7 @@ export class GoogleSheetsMCPServer {
     return {
       content: [{
         type: 'text',
-        text: `Append queued: ${key}[${column}] += ${separator}${value}`
+        text: '値を追記します'
       }]
     };
   }

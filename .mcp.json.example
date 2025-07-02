@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "live": {
+      "command": "node",
+      "args": [
+        "dist/index.js",
+        "1VC9TXYw6ONEkTRdj1kCBQQLj4Kp8AAohd7_9Eb2HUdI",
+        "live"
+      ]
+    }
+  }
+}

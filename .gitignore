@@ -44,3 +44,5 @@ build/
 *.out
 go.work
 go.work.sum
+
+.mcp.json
