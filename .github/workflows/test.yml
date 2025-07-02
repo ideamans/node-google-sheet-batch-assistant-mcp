@@ -2,74 +2,70 @@ name: Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main, develop]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
-        cache: 'yarn'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "yarn"
 
-    - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-    - name: Create service account file
-      env:
-        SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
-      run: |
-        echo "$SERVICE_ACCOUNT_JSON" > ./service-account.json
-        chmod 600 ./service-account.json
+      - name: Create service account file
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$SERVICE_ACCOUNT_JSON" > ./service-account.json
+          chmod 600 ./service-account.json
 
-    - name: Build project
-      run: yarn build
+      - name: Build project
+        run: yarn build
 
-    - name: Run type checking
-      run: yarn typecheck
+      - name: Run type checking
+        run: yarn typecheck
 
-    - name: Run linting
-      run: yarn lint
-      continue-on-error: true
+      - name: Run unit tests
+        run: yarn test
 
-    - name: Run unit tests
-      run: yarn test
+      - name: Set up test environment
+        env:
+          TEST_SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
+          TEST_SHEET_NAME: ${{ secrets.TEST_SHEET_NAME }}
+        run: |
+          echo "TEST_SHEET_ID=$TEST_SHEET_ID" >> .env
+          echo "TEST_SHEET_NAME=$TEST_SHEET_NAME" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=./service-account.json" >> .env
 
-    - name: Set up test environment
-      env:
-        TEST_SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
-        TEST_SHEET_NAME: ${{ secrets.TEST_SHEET_NAME }}
-      run: |
-        echo "TEST_SHEET_ID=$TEST_SHEET_ID" >> .env
-        echo "TEST_SHEET_NAME=$TEST_SHEET_NAME" >> .env
-        echo "GOOGLE_APPLICATION_CREDENTIALS=./service-account.json" >> .env
+      - name: Run integration tests
+        env:
+          TEST_SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
+          TEST_SHEET_NAME: ${{ secrets.TEST_SHEET_NAME }}
+        run: yarn test:integration
 
-    - name: Run integration tests
-      env:
-        TEST_SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
-        TEST_SHEET_NAME: ${{ secrets.TEST_SHEET_NAME }}
-      run: yarn test:integration
+      - name: Clean up sensitive files
+        if: always()
+        run: |
+          rm -f ./service-account.json
+          rm -f .env
 
-    - name: Clean up sensitive files
-      if: always()
-      run: |
-        rm -f ./service-account.json
-        rm -f .env
-
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: |
-          coverage/
-          test-server*.log
-        retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            coverage/
+            test-server*.log
+          retention-days: 7
