@@ -6,6 +6,11 @@ Google Sheet Batch Assistant MCP Server（Google Sheets バッチアシスタン
 
 ## 技術スタック
 
+### 言語・ランタイム
+
+- TypeScript
+- Node.js 20.x ~
+
 ### 必須パッケージ
 
 - `@modelcontextprotocol/sdk`: MCP サーバー実装
