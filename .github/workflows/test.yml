@@ -39,26 +39,17 @@ jobs:
       - name: Run unit tests
         run: yarn test
 
-      - name: Set up test environment
-        env:
-          TEST_SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
-          TEST_SHEET_NAME: ${{ secrets.TEST_SHEET_NAME }}
-        run: |
-          echo "TEST_SHEET_ID=$TEST_SHEET_ID" >> .env
-          echo "TEST_SHEET_NAME=$TEST_SHEET_NAME" >> .env
-          echo "GOOGLE_APPLICATION_CREDENTIALS=./service-account.json" >> .env
-
       - name: Run integration tests
         env:
           TEST_SHEET_ID: ${{ secrets.TEST_SHEET_ID }}
           TEST_SHEET_NAME: ${{ secrets.TEST_SHEET_NAME }}
+          GOOGLE_APPLICATION_CREDENTIALS: ./service-account.json
         run: yarn test:integration
 
       - name: Clean up sensitive files
         if: always()
         run: |
           rm -f ./service-account.json
-          rm -f .env
 
       - name: Upload test results
         if: always()

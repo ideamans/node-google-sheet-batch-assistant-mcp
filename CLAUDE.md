@@ -1,8 +1,6 @@
-# Google Sheet Batch Assistant MCP Server 仕様書
+# Google Sheet Batch Assistant MCP Server
 
-## 概要
-
-Google Sheet Batch Assistant MCP Server（Google Sheets バッチアシスタント MCP サーバー）は、AI エージェントが Google Spreadsheets のデータを効率的に読み書きするためのサーバーです。API Quota を考慮したバッチ処理機能と、複数エージェントの同時作業を可能にする設計が特徴です。
+AI エージェントが Google Spreadsheets のデータを効率的に読み書きするための MCP (Model Context Protocol) サーバーです。
 
 ## 技術スタック
 
@@ -1460,3 +1458,53 @@ jobs:
    - サービスアカウントキーファイルのパスを確認
    - キーファイルの内容が正しいか確認
    - Google Sheets API が有効化されているか確認
+
+## MCPサーバー設定
+
+### Claude Desktopでの使用
+
+Claude DesktopのMCP設定に以下を追加します：
+
+```json
+{
+  "mcpServers": {
+    "backlog": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "google-sheet-batch-assistant-mcp",
+        "<sheetId>",
+        "<sheetName>"
+      ]
+    }
+  }
+}
+```
+
+`<sheetId>` をあなたのGoogle SpreadsheetのIDに、`<sheetName>` を対象のシート名に置き換えてください。
+
+### 追加の設定オプション
+
+argsの配列により多くのオプションを追加できます：
+
+```json
+{
+  "mcpServers": {
+    "backlog": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "google-sheet-batch-assistant-mcp",
+        "<sheetId>",
+        "<sheetName>",
+        "--service-account",
+        "/path/to/service-account.json",
+        "--read-interval",
+        "3000",
+        "--batch-interval",
+        "3000"
+      ]
+    }
+  }
+}
+```

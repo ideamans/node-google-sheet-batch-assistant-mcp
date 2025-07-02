@@ -1,6 +1,6 @@
 {
   "name": "google-sheet-batch-assistant-mcp",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "MCP server for efficient batch processing of Google Sheets data with API quota management",
   "type": "module",
   "main": "dist/index.js",
@@ -15,6 +15,7 @@
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
+    "live": "./live.sh",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.js",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.js",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
@@ -29,7 +30,7 @@
     "ai-agent",
     "model-context-protocol"
   ],
-  "author": "",
+  "author": "Kunihiko Miyanaga <miyanaga@ideamans.com>",
   "license": "MIT",
   "repository": {
     "type": "git",

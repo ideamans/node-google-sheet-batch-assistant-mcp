@@ -1,21 +1,21 @@
 # Google Sheet Batch Assistant MCP Server
 
-AI エージェントが Google Spreadsheets のデータを効率的に読み書きするための MCP (Model Context Protocol) サーバーです。
+An MCP (Model Context Protocol) server that enables AI agents to efficiently read and write Google Spreadsheets data.
 
-## 特徴
+## Features
 
-- **バッチ処理**: 5秒間隔でまとめて更新し、API Quota を節約
-- **複数エージェント対応**: ロック機構で同時作業が可能
-- **自動リトライ**: ネットワークエラーに対して最大3回リトライ
-- **グレースフルシャットダウン**: 終了時に未処理の更新を実行
+- **Batch Processing**: Updates are batched every 5 seconds to conserve API quota
+- **Multi-Agent Support**: Optimistic locking allows multiple agents to work simultaneously
+- **Auto-Retry**: Automatically retries up to 3 times on network errors
+- **Graceful Shutdown**: Executes pending updates on termination
 
-## インストール
+## Installation
 
 ```bash
 npm install -g google-sheet-batch-assistant-mcp
 ```
 
-または、ローカルでビルド:
+Or build locally:
 
 ```bash
 git clone https://github.com/ideamans/node-google-sheet-batch-assistant-mcp.git
@@ -25,72 +25,72 @@ yarn build
 npm link
 ```
 
-## 使用方法
+## Usage
 
-### 1. サービスアカウントの準備
+### 1. Prepare Service Account
 
-1. [Google Cloud Console](https://console.cloud.google.com) でプロジェクトを作成
-2. Google Sheets API を有効化
-3. サービスアカウントを作成し、JSON キーをダウンロード
-4. 対象のスプレッドシートにサービスアカウントのメールアドレスを編集者として追加
+1. Create a project in [Google Cloud Console](https://console.cloud.google.com)
+2. Enable Google Sheets API
+3. Create a service account and download the JSON key
+4. Share your spreadsheet with the service account email as an editor
 
-### 2. サーバーの起動
+### 2. Start the Server
 
 ```bash
 google-sheet-batch-assistant-mcp <spreadsheetId> <sheetName> [options]
 ```
 
-#### オプション
+#### Options
 
-- `--service-account <path>`: サービスアカウント JSON ファイルのパス（デフォルト: ./service-account.json）
-- `--log-file <path>`: ログファイルのパス（デフォルト: ./google-sheet-batch-assistant-mcp.log）
-- `--read-interval <ms>`: 読み込み間隔（デフォルト: 5000）
-- `--batch-interval <ms>`: バッチ更新間隔（デフォルト: 5000）
+- `--service-account <path>`: Path to service account JSON file (default: ./service-account.json)
+- `--log-file <path>`: Path to log file (default: ./google-sheet-batch-assistant-mcp.log)
+- `--read-interval <ms>`: Read interval in milliseconds (default: 5000)
+- `--batch-interval <ms>`: Batch update interval in milliseconds (default: 5000)
 
-### 3. MCP クライアントからの使用
+### 3. Using from MCP Client
 
 ```javascript
-// 設定変更
+// Configure settings
 await client.callTool('configure', {
   keyColumn: 'A',
   headerRow: 1
 });
 
-// データ検索
+// Query data
 const result = await client.callTool('query', {
-  conditions: [['status', '==', '未処理']],
+  conditions: [['status', '==', 'pending']],
   limit: 10
 });
 
-// データ取得
+// Get data by key
 const data = await client.callTool('get', { key: 'item001' });
 
-// データ更新（バッチ）
+// Update data (batched)
 await client.callTool('update', {
   key: 'item001',
   column: 'status',
-  value: '処理済'
+  value: 'completed'
 });
 
-// 即時更新
+// Immediate update
 await client.callTool('flush', {
   key: 'item001',
   column: 'lock',
   value: 'agent1'
 });
 
-// 値の追記
+// Append value
 await client.callTool('append_value', {
   key: 'item001',
   column: 'history',
-  value: '2025-01-15: 処理完了',
+  value: '2025-01-15: Process completed',
   separator: '\\n'
 });
 ```
 
-## 開発
+## Development
 
-### セットアップ
+### Setup
 
 ```bash
 git clone https://github.com/ideamans/node-google-sheet-batch-assistant-mcp.git
@@ -98,58 +98,58 @@ cd node-google-sheet-batch-assistant-mcp
 yarn install
 ```
 
-### 手元での結合テスト
+### Local Integration Testing
 
-1. **GCPでサービスアカウントを作成**
-   - [Google Cloud Console](https://console.cloud.google.com) でプロジェクトを作成
-   - 「APIとサービス」→「認証情報」からサービスアカウントを作成
-   - 「鍵を追加」→「新しい鍵を作成」→「JSON」を選択
+1. **Create a Service Account in GCP**
+   - Create a project in [Google Cloud Console](https://console.cloud.google.com)
+   - Go to "APIs & Services" → "Credentials" to create a service account
+   - Click "Add Key" → "Create new key" → Select "JSON"
 
-2. **テスト用スプレッドシートの準備**
-   - 新しいGoogle Spreadsheetを作成
-   - サービスアカウントのメールアドレス（`xxxx@xxxx.iam.gserviceaccount.com`）を編集者として共有
-   - スプレッドシートのIDをメモ（URLの`/d/`と`/edit`の間の文字列）
+2. **Prepare Test Spreadsheet**
+   - Create a new Google Spreadsheet
+   - Share it with the service account email (`xxxx@xxxx.iam.gserviceaccount.com`) as an editor
+   - Note the spreadsheet ID (the string between `/d/` and `/edit` in the URL)
 
-3. **認証情報の設定**
+3. **Configure Credentials**
    ```bash
-   # サービスアカウントキーを保存
+   # Save service account key
    cp ~/Downloads/your-service-account-key.json ./service-account.json
    
-   # 環境変数ファイルを作成
+   # Create environment file
    cp .env.example .env
    
-   # .envを編集してTEST_SHEET_IDを設定
+   # Edit .env and set TEST_SHEET_ID
    # TEST_SHEET_ID=your-spreadsheet-id-here
    ```
 
-4. **テストの実行**
+4. **Run Tests**
    ```bash
-   # ビルド
+   # Build
    yarn build
    
-   # 単体テスト
+   # Unit tests
    yarn test
    
-   # 結合テスト
+   # Integration tests
    yarn test:integration
    ```
 
-### CIでのテスト準備
+### CI/CD Setup
 
-GitHubリポジトリのSettings > Secrets and variables > Actionsで以下を設定：
+Configure the following in GitHub repository Settings > Secrets and variables > Actions:
 
-1. **SERVICE_ACCOUNT_JSON**: サービスアカウントキーのJSON内容全体
-2. **TEST_SHEET_ID**: テスト用スプレッドシートのID
-3. **TEST_SHEET_NAME**: テスト用シート名（デフォルト: `testing`）
+1. **SERVICE_ACCOUNT_JSON**: Complete JSON content of service account key
+2. **TEST_SHEET_ID**: Test spreadsheet ID
+3. **TEST_SHEET_NAME**: Test sheet name (default: `testing`)
 
-### MCPサーバーのローカルテスト
+### Local MCP Server Testing
 
-1. **.mcp.jsonの準備**
+1. **Prepare .mcp.json**
    ```bash
    cp .mcp.json.example .mcp.json
    ```
 
-2. **.mcp.jsonを編集**
+2. **Edit .mcp.json**
    ```json
    {
      "mcpServers": {
@@ -165,28 +165,78 @@ GitHubリポジトリのSettings > Secrets and variables > Actionsで以下を�
    }
    ```
 
-3. **Claudeコマンドでテスト**
+3. **Test with Claude**
    ```bash
-   # MCPサーバーを起動してClaudeから接続
+   # Start MCP server and connect from Claude
    claude --mcp-config .mcp.json
    ```
 
-### ビルド
+## MCP Server Configuration
+
+### Using with Claude Desktop
+
+Add the following to your Claude Desktop MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "backlog": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "google-sheet-batch-assistant-mcp",
+        "<sheetId>",
+        "<sheetName>"
+      ]
+    }
+  }
+}
+```
+
+Replace `<sheetId>` with your Google Spreadsheet ID and `<sheetName>` with the target sheet name.
+
+### Additional Configuration Options
+
+You can add more options to the args array:
+
+```json
+{
+  "mcpServers": {
+    "backlog": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "google-sheet-batch-assistant-mcp",
+        "<sheetId>",
+        "<sheetName>",
+        "--service-account",
+        "/path/to/service-account.json",
+        "--read-interval",
+        "3000",
+        "--batch-interval",
+        "3000"
+      ]
+    }
+  }
+}
+```
+
+### Build
 
 ```bash
 yarn build
 ```
 
-### コード品質チェック
+### Code Quality
 
 ```bash
-# 型チェック
+# Type checking
 yarn typecheck
 
-# リント
+# Linting
 yarn lint
 ```
 
-## ライセンス
+## License
 
 MIT
