@@ -34,11 +34,20 @@ export class GoogleSheetsMCPServer {
     this.config = config;
     this.logger = createLogger(config.logFilePath);
     
+    // 初期設定値を適用
+    if (config.keyColumn) {
+      this.sheetConfig.keyColumn = config.keyColumn;
+    }
+    if (config.headerRow) {
+      this.sheetConfig.headerRow = config.headerRow;
+    }
+    
     this.sheetsClient = new GoogleSheetsClient(
       config.spreadsheetId,
       config.sheetName,
       config.serviceAccountPath,
-      config.readInterval
+      config.readInterval,
+      this.sheetConfig.headerRow
     );
     
     this.server = new Server(
@@ -272,7 +281,7 @@ export class GoogleSheetsMCPServer {
       results = results.slice(0, limit);
     }
     
-    const keyColumn = data.headers[0];
+    const keyColumn = this.getKeyColumnName(data.headers);
     const keys = results.map(row => row[keyColumn]);
     
     return {
@@ -287,7 +296,7 @@ export class GoogleSheetsMCPServer {
     const { key } = args;
     
     const data = await this.sheetsClient.loadData();
-    const keyColumn = data.headers[0];
+    const keyColumn = this.getKeyColumnName(data.headers);
     
     const row = data.rows.find(row => row[keyColumn] === key);
     
@@ -354,7 +363,7 @@ export class GoogleSheetsMCPServer {
       throw new Error('No cached data available');
     }
     
-    const keyColumn = data.headers[0];
+    const keyColumn = this.getKeyColumnName(data.headers);
     const row = data.rows.find(row => row[keyColumn] === key);
     
     const currentValue = row ? (row[column] || '') : '';
@@ -445,9 +454,68 @@ export class GoogleSheetsMCPServer {
     process.on('SIGTERM', () => shutdown('SIGTERM'));
   }
   
+  /**
+   * 現在の設定に基づいてキーカラム名を取得
+   */
+  private getKeyColumnName(headers: string[]): string {
+    // キーカラムが設定されていて、ヘッダーに含まれている場合はそれを使用
+    if (this.sheetConfig.keyColumn && headers.includes(this.sheetConfig.keyColumn)) {
+      return this.sheetConfig.keyColumn;
+    }
+    // そうでなければ最初のカラムを使用
+    return headers[0] || 'A';
+  }
+
+  /**
+   * Excel形式のカラム記号(A, B, C...)をインデックスに変換
+   */
+  private columnLetterToIndex(letter: string): number {
+    const upperLetter = letter.toUpperCase();
+    let index = 0;
+    for (let i = 0; i < upperLetter.length; i++) {
+      index = index * 26 + (upperLetter.charCodeAt(i) - 'A'.charCodeAt(0) + 1);
+    }
+    return index - 1; // 0-indexed
+  }
+
+  /**
+   * キーカラムを解決する
+   * 1. ヘッダー行のカラム名として存在するか確認
+   * 2. Excel記法のカラム番号として評価
+   * 3. どちらでもなければ最初のカラムを使用
+   */
+  private async resolveKeyColumn(): Promise<void> {
+    if (!this.sheetConfig.keyColumn) return;
+
+    const data = await this.sheetsClient.loadData();
+    const headers = data.headers;
+
+    // 1. カラム名として存在するか確認
+    if (headers.includes(this.sheetConfig.keyColumn)) {
+      // そのまま使用
+      return;
+    }
+
+    // 2. Excel記法として評価
+    if (/^[A-Z]+$/i.test(this.sheetConfig.keyColumn)) {
+      const index = this.columnLetterToIndex(this.sheetConfig.keyColumn);
+      if (index >= 0 && index < headers.length) {
+        // インデックスに対応するカラム名を設定
+        this.sheetConfig.keyColumn = headers[index];
+        return;
+      }
+    }
+
+    // 3. 最初のカラムを使用
+    this.sheetConfig.keyColumn = headers[0] || 'A';
+  }
+
   async start(): Promise<void> {
     try {
       await this.sheetsClient.initialize();
+      
+      // キーカラムの解決
+      await this.resolveKeyColumn();
       
       this.logger.info('Server started', {
         spreadsheetId: this.config.spreadsheetId,

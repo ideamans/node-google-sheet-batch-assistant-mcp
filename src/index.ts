@@ -51,8 +51,19 @@ const argv = await yargs(hideBin(process.argv))
     description: "Batch update interval in milliseconds",
     default: 5000,
   })
+  .option("key", {
+    alias: "k",
+    type: "string",
+    description: "Key column name or column letter (e.g., 'id' or 'A')",
+    default: "A",
+  })
+  .option("header", {
+    alias: "h",
+    type: "number",
+    description: "Header row number (1-based)",
+    default: 1,
+  })
   .help()
-  .alias("help", "h")
   .parse();
 
 // サービスアカウントパスの決定
@@ -68,6 +79,9 @@ if (argv.serviceAccount) {
   serviceAccountPath = path.resolve('./service-account.json');
 }
 
+// ヘッダー行の処理（1未満や数値変換できない場合は1）
+const headerRow = Math.max(1, parseInt(argv.header?.toString() || '1', 10) || 1);
+
 const config: ServerConfig = {
   spreadsheetId: argv.spreadsheetId as string,
   sheetName: argv.sheetName as string,
@@ -75,6 +89,8 @@ const config: ServerConfig = {
   logFilePath: path.resolve(argv.logFile),
   readInterval: argv.readInterval,
   batchInterval: argv.batchInterval,
+  keyColumn: argv.key as string,
+  headerRow: headerRow,
 };
 
 async function main() {

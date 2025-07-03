@@ -1,6 +1,8 @@
 # Google Sheet Batch Assistant MCP Server
 
-An MCP (Model Context Protocol) server that enables AI agents to efficiently read and write Google Spreadsheets data.
+[日本語版はこちら](./README_ja.md)
+
+An MCP (Model Context Protocol) server that enables AI agents to efficiently read and write Google Spreadsheets data. This library is designed for batch processing by AI agents, providing management of task lists, result data, and progress information through spreadsheets.
 
 ## Features
 
@@ -46,45 +48,47 @@ google-sheet-batch-assistant-mcp <spreadsheetId> <sheetName> [options]
 - `--log-file <path>`: Path to log file (default: ./google-sheet-batch-assistant-mcp.log)
 - `--read-interval <ms>`: Read interval in milliseconds (default: 5000)
 - `--batch-interval <ms>`: Batch update interval in milliseconds (default: 5000)
+- `--key, -k <keyColumn>`: Key column name or letter (e.g., 'id' or 'A') (default: A)
+- `--header, -h <headerRow>`: Header row number (1-based) (default: 1)
 
 ### 3. Using from MCP Client
 
 ```javascript
 // Configure settings
-await client.callTool('configure', {
-  keyColumn: 'A',
-  headerRow: 1
+await client.callTool("configure", {
+  keyColumn: "A",
+  headerRow: 1,
 });
 
 // Query data
-const result = await client.callTool('query', {
-  conditions: [['status', '==', 'pending']],
-  limit: 10
+const result = await client.callTool("query", {
+  conditions: [["status", "==", "pending"]],
+  limit: 10,
 });
 
 // Get data by key
-const data = await client.callTool('get', { key: 'item001' });
+const data = await client.callTool("get", { key: "item001" });
 
 // Update data (batched)
-await client.callTool('update', {
-  key: 'item001',
-  column: 'status',
-  value: 'completed'
+await client.callTool("update", {
+  key: "item001",
+  column: "status",
+  value: "completed",
 });
 
 // Immediate update
-await client.callTool('flush', {
-  key: 'item001',
-  column: 'lock',
-  value: 'agent1'
+await client.callTool("flush", {
+  key: "item001",
+  column: "lock",
+  value: "agent1",
 });
 
 // Append value
-await client.callTool('append_value', {
-  key: 'item001',
-  column: 'history',
-  value: '2025-01-15: Process completed',
-  separator: '\\n'
+await client.callTool("append_value", {
+  key: "item001",
+  column: "history",
+  value: "2025-01-15: Process completed",
+  separator: "\\n",
 });
 ```
 
@@ -101,35 +105,39 @@ yarn install
 ### Local Integration Testing
 
 1. **Create a Service Account in GCP**
+
    - Create a project in [Google Cloud Console](https://console.cloud.google.com)
    - Go to "APIs & Services" → "Credentials" to create a service account
    - Click "Add Key" → "Create new key" → Select "JSON"
 
 2. **Prepare Test Spreadsheet**
+
    - Create a new Google Spreadsheet
    - Share it with the service account email (`xxxx@xxxx.iam.gserviceaccount.com`) as an editor
    - Note the spreadsheet ID (the string between `/d/` and `/edit` in the URL)
 
 3. **Configure Credentials**
+
    ```bash
    # Save service account key
    cp ~/Downloads/your-service-account-key.json ./service-account.json
-   
+
    # Create environment file
    cp .env.example .env
-   
+
    # Edit .env and set TEST_SHEET_ID
    # TEST_SHEET_ID=your-spreadsheet-id-here
    ```
 
 4. **Run Tests**
+
    ```bash
    # Build
    yarn build
-   
+
    # Unit tests
    yarn test
-   
+
    # Integration tests
    yarn test:integration
    ```
@@ -145,21 +153,19 @@ Configure the following in GitHub repository Settings > Secrets and variables > 
 ### Local MCP Server Testing
 
 1. **Prepare .mcp.json**
+
    ```bash
    cp .mcp.json.example .mcp.json
    ```
 
 2. **Edit .mcp.json**
+
    ```json
    {
      "mcpServers": {
        "google-sheet-batch-assistant": {
          "command": "node",
-         "args": [
-           "dist/index.js",
-           "your-spreadsheet-id-here",
-           "live"
-         ]
+         "args": ["dist/index.js", "your-spreadsheet-id-here", "live"]
        }
      }
    }
@@ -214,7 +220,11 @@ You can add more options to the args array:
         "--read-interval",
         "3000",
         "--batch-interval",
-        "3000"
+        "3000",
+        "--key",
+        "task_id",
+        "--header",
+        "2"
       ]
     }
   }

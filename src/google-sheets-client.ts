@@ -10,14 +10,17 @@ export class GoogleSheetsClient {
   private lastReadTime: number = 0;
   private readonly readInterval: number;
   private readonly maxRetries: number = 3;
+  private headerRow: number = 1;
   
   constructor(
     private spreadsheetId: string,
     private sheetName: string,
     private serviceAccountPath: string,
-    readInterval: number
+    readInterval: number,
+    headerRow: number = 1
   ) {
     this.readInterval = readInterval;
+    this.headerRow = headerRow;
   }
 
   async initialize(): Promise<void> {
@@ -78,30 +81,77 @@ export class GoogleSheetsClient {
     const data = await this.retryOperation(async () => {
       if (!this.sheet) throw new Error('Sheet not initialized');
       
-      const rows = await this.sheet.getRows();
-      const headers = this.sheet.headerValues;
-      
+      let headers: string[];
+      let rowData: Record<string, string>[];
       const keyToRowIndex = new Map<string, number>();
       const columnToIndex = new Map<string, number>();
-      
-      headers.forEach((header, index) => {
-        columnToIndex.set(header, index);
-      });
-      
-      const rowData = rows.map((row, index) => {
-        const obj: Record<string, string> = {};
-        headers.forEach(header => {
-          obj[header] = row.get(header) || '';
+
+      if (this.headerRow === 1) {
+        // デフォルトの動作：google-spreadsheetが自動的に1行目をヘッダーとして使用
+        const rows = await this.sheet.getRows();
+        headers = this.sheet.headerValues;
+        
+        headers.forEach((header, index) => {
+          columnToIndex.set(header, index);
         });
         
-        const keyColumn = headers[0];
-        const keyValue = row.get(keyColumn);
-        if (keyValue) {
-          keyToRowIndex.set(keyValue, index + 2);
+        rowData = rows.map((row, index) => {
+          const obj: Record<string, string> = {};
+          headers.forEach(header => {
+            obj[header] = row.get(header) || '';
+          });
+          
+          const keyColumn = headers[0];
+          const keyValue = row.get(keyColumn);
+          if (keyValue) {
+            keyToRowIndex.set(keyValue, index + 2); // 1行目はヘッダー、データは2行目から
+          }
+          
+          return obj;
+        });
+      } else {
+        // カスタムヘッダー行の場合：手動でセルを読み込む
+        await this.sheet.loadCells();
+        
+        // ヘッダー行を読み込む
+        headers = [];
+        for (let col = 0; col < this.sheet.columnCount; col++) {
+          const cell = this.sheet.getCell(this.headerRow - 1, col);
+          if (cell.value) {
+            headers.push(String(cell.value));
+          } else {
+            break; // 空のセルが見つかったらヘッダーの終わり
+          }
         }
         
-        return obj;
-      });
+        headers.forEach((header, index) => {
+          columnToIndex.set(header, index);
+        });
+        
+        // データ行を読み込む
+        rowData = [];
+        for (let row = this.headerRow; row < this.sheet.rowCount; row++) {
+          const obj: Record<string, string> = {};
+          let hasData = false;
+          
+          headers.forEach((header, colIndex) => {
+            const cell = this.sheet!.getCell(row, colIndex);
+            const value = cell.value ? String(cell.value) : '';
+            obj[header] = value;
+            if (value) hasData = true;
+          });
+          
+          if (!hasData) break; // 空行が見つかったらデータの終わり
+          
+          const keyColumn = headers[0];
+          const keyValue = obj[keyColumn];
+          if (keyValue) {
+            keyToRowIndex.set(keyValue, row + 1); // 0-indexedから1-indexedに変換
+          }
+          
+          rowData.push(obj);
+        }
+      }
       
       return {
         headers,
@@ -136,7 +186,25 @@ export class GoogleSheetsClient {
         
         if (rowIndex !== undefined && colIndex !== undefined) {
           const cell = this.sheet.getCell(rowIndex - 1, colIndex);
-          cell.value = transaction.value;
+          
+          // 値の型を適切に設定（数値、ブール値、文字列）
+          const trimmedValue = transaction.value.trim();
+          
+          // 数値として解析を試みる
+          if (trimmedValue !== '' && !isNaN(Number(trimmedValue))) {
+            cell.value = Number(trimmedValue);
+          }
+          // ブール値として解析
+          else if (trimmedValue.toUpperCase() === 'TRUE') {
+            cell.value = true;
+          }
+          else if (trimmedValue.toUpperCase() === 'FALSE') {
+            cell.value = false;
+          }
+          // それ以外は文字列として設定
+          else {
+            cell.value = transaction.value;
+          }
         }
       }
       

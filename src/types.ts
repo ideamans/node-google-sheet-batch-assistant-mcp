@@ -5,6 +5,8 @@ export interface ServerConfig {
   logFilePath: string;
   readInterval: number;
   batchInterval: number;
+  keyColumn?: string;
+  headerRow?: number;
 }
 
 export interface SheetConfig {

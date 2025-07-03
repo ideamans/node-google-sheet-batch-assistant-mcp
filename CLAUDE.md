@@ -1,6 +1,6 @@
 # Google Sheet Batch Assistant MCP Server
 
-AI エージェントが Google Spreadsheets のデータを効率的に読み書きするための MCP (Model Context Protocol) サーバーです。
+AI エージェントが Google Spreadsheets のデータを効率的に読み書きするための MCP (Model Context Protocol) サーバーです。このライブラリは AI エージェントによるバッチ処理において、タスクのリストや結果データ、進捗情報などをスプレッドシートで管理するための MCP Server です。
 
 ## 技術スタック
 
@@ -122,6 +122,8 @@ google-sheet-batch-assistant-mcp <spreadsheetId> <sheetName> [options]
 - `--log-file <path>`: ログファイルのパス（デフォルト: ./google-sheet-batch-assistant-mcp.log）
 - `--read-interval <ms>`: 読み込み間隔（デフォルト: 5000）
 - `--batch-interval <ms>`: バッチ更新間隔（デフォルト: 5000）
+- `--key, -k <keyColumn>`: キーカラム名またはカラム記号（例: 'id' または 'A'）（デフォルト: A）
+- `--header, -h <headerRow>`: ヘッダー行番号（1 から始まる）（デフォルト: 1）
 
 ### 起動例
 
@@ -1459,11 +1461,11 @@ jobs:
    - キーファイルの内容が正しいか確認
    - Google Sheets API が有効化されているか確認
 
-## MCPサーバー設定
+## MCP サーバー設定
 
-### Claude Desktopでの使用
+### Claude Desktop での使用
 
-Claude DesktopのMCP設定に以下を追加します：
+Claude Desktop の MCP 設定に以下を追加します：
 
 ```json
 {
@@ -1481,11 +1483,11 @@ Claude DesktopのMCP設定に以下を追加します：
 }
 ```
 
-`<sheetId>` をあなたのGoogle SpreadsheetのIDに、`<sheetName>` を対象のシート名に置き換えてください。
+`<sheetId>` をあなたの Google Spreadsheet の ID に、`<sheetName>` を対象のシート名に置き換えてください。
 
 ### 追加の設定オプション
 
-argsの配列により多くのオプションを追加できます：
+args の配列により多くのオプションを追加できます：
 
 ```json
 {
@@ -1502,7 +1504,11 @@ argsの配列により多くのオプションを追加できます：
         "--read-interval",
         "3000",
         "--batch-interval",
-        "3000"
+        "3000",
+        "--key",
+        "task_id",
+        "--header",
+        "2"
       ]
     }
   }

@@ -1,6 +1,6 @@
 {
   "name": "google-sheet-batch-assistant-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for efficient batch processing of Google Sheets data with API quota management",
   "type": "module",
   "main": "dist/index.js",
