@@ -1514,3 +1514,22 @@ args の配列により多くのオプションを追加できます：
   }
 }
 ```
+
+## npm への公開
+
+`v*` のタグを push すると `.github/workflows/publish.yml` がテストとビルドのあと npm に**そのまま公開する**
+（承認待ちにしない）。認証は npm の Trusted Publishing（GitHub Actions の OIDC）で、`NPM_TOKEN` などのシークレットは使わない。
+provenance は自動で付く。
+
+```bash
+# package.json の version を上げてコミット・push してから
+git tag vX.Y.Z && git push origin vX.Y.Z
+```
+
+- タグと package.json の version が違えば落ちる。npm に同じ版があれば何もしない
+- プレリリース（`1.2.0-beta.0`）は `latest` ではなく識別子の dist-tag（`beta`）で出る
+- 手元から `npm publish` しない（トークンを置かない）
+- タグを打ち直さずに出し直すときは、Actions の「Publish to npm」を workflow_dispatch で起動する（選んだブランチの package.json の版を出す）
+- PR で `publish.yml` を変えると、公開せずにビルドと `npm pack --dry-run` までが走る
+- 前提: npmjs.com の `google-sheet-batch-assistant-mcp` の設定で、Trusted Publisher に GitHub Actions・`ideamans/node-google-sheet-batch-assistant-mcp`・`publish.yml`・権限 **publish** を登録してあること。
+  stage publish の権限だけだと `npm publish` は `E403 OIDC permission denied` になる
